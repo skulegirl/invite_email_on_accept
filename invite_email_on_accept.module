@@ -1,0 +1,45 @@
+<?php
+
+// Just hardcode this message for now. Making it configurable would be nice but will take way too much time.
+
+/***
+ * Implement hook_invite
+ */
+function invite_email_on_accept_invite($op, $args)
+{
+  switch($op) {
+    case 'escalate':
+      $message = t('Congratulations! The invitation that you sent to @invitee to join Boondockers Welcome has been accepted. ',
+        array('@invitee' => $args['invitee']->mail));
+      $inviter = $args['inviter'];
+      if (module_exists('uc_roles'))
+      {
+        $expiry = db_result(db_query_range('SELECT expiration FROM {uc_roles_expirations} WHERE uid = %d', $inviter->uid, 0, 1));
+        $message .= t('Your membership has been extended by 1 month. Your new membership expiry date is now @expiry.',
+          array('@expiry' => format_date($expiry, 'custom', 'F jS, Y', $inviter->timezone)));
+      }
+      dd($message, 'invite accepted message');
+      $from = NULL;
+      $subject = 'Invitation accepted, your membership has been extended.';
+      $email = $inviter->mail;
+      $invite_accepted = array(
+        'data' => array('subject' => $subject, 'body' => $message),
+       );
+      $params = array('invite_accepted' => $invite_accepted);
+      
+      global $language;
+      drupal_mail('invite_email_on_accept', 'invite_accepted', $email, $language, $params, $from, TRUE);
+      break;
+  }
+}
+
+/***
+ * Implementation of hook_mail
+ */
+function invite_email_on_accept_mail($key, &$message, $params) {
+  dd($params, 'hook_mail params');
+  $invite_accepted = $params['invite_accepted'];
+  $message['subject'] = $invite_accepted['data']['subject'];
+  $message['body'] = $invite_accepted['data']['body'];
+  dd($message, 'hook_mail message');
+}
