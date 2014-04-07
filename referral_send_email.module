@@ -12,7 +12,6 @@ function referral_send_email_userpoints($op, $params = array())
     if ($params['reference'] == 'userpoints_invite' && 
         preg_match('/invite register invited (\d+)/', $params['operation'], $matches)) 
     {
-      dd($params, 'invite params');
       $invitee_uid = $matches[1];
       _referral_complete_send_email('invite', $params['uid'], $invitee_uid);
     }
