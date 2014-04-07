@@ -1,6 +1,0 @@
-name = Invite Email On Accept
-description = "Send email to inviter when invitee accepts" 
-dependencies[] = invite
-core = 6.x
-version = "6.x-1.0"
-

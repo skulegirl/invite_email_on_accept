@@ -1,0 +1,72 @@
+<?php
+
+// Just hardcode this message for now. Making it configurable would be nice but will take way too much time.
+
+/***
+ * Implement hook_userpoints
+ */
+function referral_send_email_userpoints($op, $params = array())
+{
+  if ($op == 'points after')
+  {
+    if ($params['reference'] == 'userpoints_invite' && 
+        preg_match('/invite register invited (\d+)/', $params['operation'], $matches)) 
+    {
+      dd($params, 'invite params');
+      $invitee_uid = $matches[1];
+      _referral_complete_send_email('invite', $params['uid'], $invitee_uid);
+    }
+    else if ($params['reference'] == 'referral' &&
+        preg_match('/referral signed (.*)/', $params['operation'], $matches))
+    {
+      $referee_uid = $matches[1];
+      _referral_complete_send_email('referral', $params['uid'], $referee_uid);
+    }
+  }
+}
+
+function _referral_complete_send_email($type, $referrer_uid, $referee_uid)
+{
+  $referee = user_load($referee_uid);
+  if ($type == 'invite')
+  {
+    $message = t('Congratulations! The invitation to join Boondockers Welcome that you sent to @invitee has been accepted. ',
+      array('@invitee' => $referee->mail));
+    $subject = 'Invitation accepted';
+  }
+  else if ($type == 'referral')
+  {
+    $message = t('Congratulations! New member <a href="/users/@referee">@referee</a> joined Boondockers Welcome from your referral link. ',
+      array('@referee' => $referee->name));
+    $subject = 'You\'ve referred a new member';
+  }
+  $referrer = user_load($referrer_uid);
+
+  $expiry = db_result(db_query_range('SELECT expiration FROM {uc_roles_expirations} WHERE uid = %d', $referrer_uid, 0, 1));
+  // $expiry will be false if the user doesn't have an expiring role, e.g. a founding member
+  if ($expiry)
+  {
+    $subject .= t(', your membership has been extended');
+    $message .= t('Your membership has been extended by 1 month. Your new membership expiry date is now @expiry.',
+      array('@expiry' => format_date($expiry, 'custom', 'F jS, Y', $referrer->timezone)));
+  }
+
+  $from = NULL;
+  $email = $referrer->mail;
+  $referral_details = array(
+    'data' => array('subject' => $subject, 'body' => $message),
+   );
+  $params = array('referral_details' => $referral_details);
+  
+  global $language;
+  drupal_mail('referral_send_email', 'referral_registered', $email, $language, $params, $from, TRUE);
+}
+
+/***
+ * Implementation of hook_mail
+ */
+function referral_send_email_mail($key, &$message, $params) {
+  $referral_details= $params['referral_details'];
+  $message['subject'] = $referral_details['data']['subject'];
+  $message['body'] = $referral_details['data']['body'];
+}

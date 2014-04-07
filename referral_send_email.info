@@ -1,0 +1,8 @@
+name = Referral Send Email 
+description = "Send email to referrer when referrer accepts - applies to both invite and referral modules when points are awarded" 
+dependencies[] = userpoints_invite
+dependencies[] = my_referral_userpoints
+dependencies[] = uc_roles
+core = 6.x
+version = "6.x-1.0"
+
