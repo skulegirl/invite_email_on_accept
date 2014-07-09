@@ -7,5 +7,4 @@ if (module_exists('userpoints_extend_role'))
   $weight = db_result(db_query("SELECT weight FROM {system} WHERE type = 'module' AND name = 'userpoints_extend_role'"));
   db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'referral_send_email'", $weight+5);
 }
-?>
 
