@@ -41,7 +41,8 @@ function _referral_complete_send_email($type, $referrer_uid, $referee_uid)
   }
   $referrer = user_load($referrer_uid);
 
-  $expiry = db_result(db_query_range('SELECT expiration FROM {uc_roles_expirations} WHERE uid = %d', $referrer_uid, 0, 1));
+  $expiry = db_query_range('SELECT expiration FROM {uc_roles_expirations} WHERE uid = :referrer_uid', 0, 1,
+    array(':referrer_uid' => $referrer_uid))->fetchField();
   // $expiry will be false if the user doesn't have an expiring role, e.g. a founding member
   if ($expiry)
   {
